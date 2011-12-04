@@ -2,7 +2,7 @@
 
 namespace microsite\core;
 
-abstract class Singleton extends BaseObject
+abstract class Singleton
 {
 	// Single instance of class available.
 	private static $instances = array();
@@ -22,5 +22,4 @@ abstract class Singleton extends BaseObject
 	 */
 	public final function __construct() {}
 	private final function __clone() {}
-	public final static function create() {}
 }

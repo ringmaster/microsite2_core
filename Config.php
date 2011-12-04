@@ -5,26 +5,10 @@ namespace microsite\core;
 class Config extends Singleton {
 	protected $data = false;
 
-	const MICROSITE_CONFIG = '/app/config.ini';
+	const MICROSITE_CONFIG = '/app/config.php';
 
-	public function load( $filename = null ) {
-		if ( empty($filename) ) {
-			$filename = MICROSITE_PATH . self::MICROSITE_CONFIG;
-		}
-
-		if ( !is_null( $filename ) && file_exists( $filename ) ) {
-			$this->data = parse_ini_file( $filename, true );
-		}
-		else {
-			$this->data = array();
-		}
-
-		// Some decent default config
-		$this->data = $this->merge_arrays($this->data, array('paths' => array(
-				'views' => '{MICROSITE_PATH}/app/views',
-				'controllers' => '{MICROSITE_PATH}/app/controllers',
-			)
-		));
+	public static function load( $load = null ) {
+		$config = Config::instance();
 
 		$replacements = array(
 			'#{MICROSITE_PATH}#' => MICROSITE_PATH,
@@ -32,41 +16,74 @@ class Config extends Singleton {
 			'#{MICROSITE_CONFIG_PATH}#' => dirname( MICROSITE_PATH . self::MICROSITE_CONFIG ),
 		);
 
-		$this->data = $this->replace( $this->data, $replacements );
-	}
+		// Some decent default config
+		if(!$config->data) {
+			$data = array(
+				'paths' => array(
+					'views' => '{MICROSITE_PATH}/app/views',
+					'controllers' => '{MICROSITE_PATH}/app/controllers',
+				)
+			);
+			$config->data = Config::replace($data, $replacements);
+		}
 
-	protected function merge_arrays( $a1, $a2 ) {
-		foreach ( $a2 as $key => $Value ) {
-			if ( array_key_exists( $key, $a1 ) && is_array( $Value ) ) {
-				$a1[$key] = $this->merge_arrays( $a1[$key], $a2[$key] );
+		if ( empty($load) ) {
+			$load = MICROSITE_PATH . self::MICROSITE_CONFIG;
+		}
+
+		$data = false;
+		if ( !is_null( $load ) ) {
+			if(is_string($load) && file_exists( $load ) ) {
+				preg_match('#\.(\w+)$#', $load, $matches);
+				switch(strtolower($matches[1])) {
+					case 'ini':
+						$data = parse_ini_file( $load, true );
+						break;
+					default:
+						include $load;
+				}
+
 			}
-			else {
-				$a1[$key] = $Value;
+			if(is_array( $load )) {
+				$data = $load;
 			}
 		}
-		return $a1;
+
+		if($data) {
+			$data = Config::replace( $data, $replacements );
+			$config->data = Utils::merge_arrays($config->data, $data);
+		}
 	}
 
-	protected function replace( $array, $replacements ) {
+	protected static function replace( $array, $replacements ) {
 		$out = array();
 		foreach ( $array as $key => $value ) {
 			if ( is_array( $value ) ) {
-				$out[$key] = $this->replace( $value, $replacements );
-			} else {
+				$out[$key] = Config::replace( $value, $replacements );
+			}
+			elseif( is_string( $value ) ) {
 				$out[$key] = preg_replace( array_keys( $replacements ), array_values( $replacements ), $value );
+			}
+			else {
+				$out[$key] = $value;
 			}
 		}
 		return $out;
 	}
 
-	public function get( $key, $default = null ) {
-		if ( !is_array( $this->data ) ) {
+	public static function get( $key = null, $default = null ) {
+		$config = Config::instance();
+
+		if ( !is_array( $config->data ) ) {
 			self::load();
 		}
 		if ( is_scalar( $key ) ) {
 			$key = explode( '/', $key );
 		}
-		$data = & $this->data;
+		else {
+			$key = array();
+		}
+		$data = & $config->data;
 		foreach ( $key as $keys ) {
 			if ( isset($data[$keys]) ) {
 				$data = & $data[$keys];
@@ -77,10 +94,7 @@ class Config extends Singleton {
 		return $data;
 	}
 
-	public function get_routes() {
-		return array(
-			'hello' => new RegexRoute('app\controllers\Index', 'hello', '#^hello(?:/(?P<name>.+))?#'),
-			'default' => new RegexRoute('app\controllers\Index', 'index', '#.*#'),
-		);
+	public static function __static() {
+
 	}
 }

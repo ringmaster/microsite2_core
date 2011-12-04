@@ -28,7 +28,7 @@ class View extends BaseObject {
 	public function get_views() {
 		static $views;
 		if(empty($views)) {
-			$glob = glob( Config::instance()->get('paths/views') . '/*.php' );
+			$glob = glob( Config::get('paths/views') . '/*.php' );
 			$views = array();
 			foreach ( $glob as $view ) {
 				$views[basename( $view, '.php' )] = $view;

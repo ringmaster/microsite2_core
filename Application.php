@@ -8,7 +8,7 @@ class Application extends BaseObject {
 
 	public static function start() {
 
-		$routes = Config::instance()->get_routes();
+		$routes = Config::get('routes');
 
 		foreach($routes as $route) {
 			if($route->match(self::get_path())) {
