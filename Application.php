@@ -15,7 +15,7 @@ class Application extends BaseObject {
 				$controller_class = $route->controller;
 				$action = $route->action;
 
-				$controller = new $route->controller();
+				$controller = new $controller_class();
 				$request_method = strtolower( $_SERVER['REQUEST_METHOD'] );
 				if ( method_exists( $controller, $action . '_' . $request_method ) ) {
 					$action .= '_' . $request_method;
@@ -67,7 +67,7 @@ class Application extends BaseObject {
 				$scriptname = $_SERVER['PHP_SELF'];
 				break;
 			default:
-				throw new exception('Could not determine script name.');
+				throw new \Exception('Could not determine script name.');
 				die();
 		}
 		return $scriptname;

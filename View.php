@@ -8,7 +8,7 @@ class View extends BaseObject {
 	public function __construct( $vars = array(), $template = null ) {
 		$this->vars = $vars;
 		if ( isset($template) ) {
-			$this->render( $template );
+			echo $this->render( $template );
 		}
 	}
 
@@ -42,7 +42,7 @@ class View extends BaseObject {
 		$views = $this->get_views();
 
 		if ( $viewname == '' ) {
-			if ( $this->vars['_view'] != '' ) {
+			if ( !empty($this->vars['_view']) ) {
 				$viewname = $this->vars['_view'];
 			} else {
 				$viewname = '404';
